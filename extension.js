@@ -27,45 +27,37 @@ function resetState() {
 
 function enable() {
     resetState();
-    
+
     historyManagerInjections['prevItemPrefix'] = undefined;
     historyManagerInjections['nextItemPrefix'] = undefined;
     historyManagerInjections['_onEntryKeyPress'] = undefined;
-    
+
     historyManagerInjections['prevItemPrefix'] = injectToFunction(History.HistoryManager.prototype, 'prevItemPrefix', function(text, prefix) {
-        function _hasPrefix(s1, prefix) {
-            return s1.indexOf(prefix) == 0;
-        }
-        
         for (let i = this._historyIndex - 1; i >= 0; i--) {
-            if (_hasPrefix(this._history[i], prefix) && this._history[i] != text) {
+            if (this._history[i].indexOf(prefix) === 0 && this._history[i] !== text) {
                 this._historyIndex = i;
                 return this._indexChanged();
             }
         }
-        
+
         return text;
     });
-    
+
     historyManagerInjections['nextItemPrefix'] = injectToFunction(History.HistoryManager.prototype, 'nextItemPrefix', function(text, prefix) {
-        function _hasPrefix(s1, prefix) {
-            return s1.indexOf(prefix) == 0;
-        }
-        
         for (let i = this._historyIndex + 1; i < this._history.length; i++) {
-            if (_hasPrefix(this._history[i], prefix) && this._history[i] != text) {
+            if (this._history[i].indexOf(prefix) === 0 && this._history[i] !== text) {
                 this._historyIndex = i;
                 return this._indexChanged();
             }
         }
-        
+
         return text;
     });
-    
+
     historyManagerInjections['_onEntryKeyPress'] = injectToFunction(History.HistoryManager.prototype, '_onEntryKeyPress', function(entry, event) {
         let symbol = event.get_key_symbol();
-        if (symbol == Clutter.KEY_Page_Up) {
-            let pos = (entry.get_cursor_position() != -1) ? entry.get_cursor_position() : entry.get_text().length;
+        if (symbol === Clutter.KEY_Page_Up) {
+            let pos = (entry.get_cursor_position() !== -1) ? entry.get_cursor_position() : entry.get_text().length;
             if (pos > 0) {
                 this.prevItemPrefix(entry.get_text(), entry.get_text().slice(0, pos));
                 entry.set_selection(pos, pos);
@@ -73,8 +65,8 @@ function enable() {
                 this.prevItem(entry.get_text());
             }
             return true;
-        } else if (symbol == Clutter.KEY_Page_Down) {
-            let pos = (entry.get_cursor_position() != -1) ? entry.get_cursor_position() : entry.get_text().length;
+        } else if (symbol === Clutter.KEY_Page_Down) {
+            let pos = (entry.get_cursor_position() !== -1) ? entry.get_cursor_position() : entry.get_text().length;
             if (pos > 0) {
                 this.nextItemPrefix(entry.get_text(), entry.get_text().slice(0, pos));
                 entry.set_selection(pos, pos);
