@@ -100,12 +100,12 @@ function injectToFunction(objectPrototype, functionName, injectedFunction) {
         }
 
         let injectedReturnValue = injectedFunction.apply(this, arguments);
-        if (returnValue === undefined) {
+        if (injectedReturnValue !== undefined) {
             returnValue = injectedReturnValue;
         }
 
         return returnValue;
-    }
+    };
 
     return originalFunction;
 }
