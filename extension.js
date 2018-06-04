@@ -60,19 +60,21 @@ function enable() {
             let pos = (entry.get_cursor_position() !== -1) ? entry.get_cursor_position() : entry.get_text().length;
             if (pos > 0) {
                 this.prevItemPrefix(entry.get_text(), entry.get_text().slice(0, pos));
-                entry.set_selection(pos, pos);
             } else {
-                this.prevItem(entry.get_text());
+                this._setPrevItem(entry.get_text());
             }
+            entry.set_selection(pos, pos);
+
             return true;
         } else if (symbol === Clutter.KEY_Page_Down) {
             let pos = (entry.get_cursor_position() !== -1) ? entry.get_cursor_position() : entry.get_text().length;
             if (pos > 0) {
                 this.nextItemPrefix(entry.get_text(), entry.get_text().slice(0, pos));
-                entry.set_selection(pos, pos);
             } else {
-                this.nextItem(entry.get_text());
+                this._setNextItem(entry.get_text())
             }
+            entry.set_selection(pos, pos);
+
             return true;
         }
     });
