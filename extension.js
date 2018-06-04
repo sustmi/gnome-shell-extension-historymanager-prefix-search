@@ -83,8 +83,6 @@ function enable() {
             }
             return true;
         }
-        
-        return false;
     });
 
 }
