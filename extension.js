@@ -14,12 +14,15 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-const Clutter = imports.gi.Clutter;
-
 const History = imports.misc.history;
-const Main = imports.ui.main;
+
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
+const Convenience = Me.imports.convenience;
+const Prefs = Me.imports.prefs;
 
 let historyManagerInjections;
+let settings;
 
 function resetState() {
     historyManagerInjections = {};
@@ -32,7 +35,7 @@ function enable() {
     historyManagerInjections['nextItemPrefix'] = undefined;
     historyManagerInjections['_onEntryKeyPress'] = undefined;
 
-    historyManagerInjections['prevItemPrefix'] = injectToFunction(History.HistoryManager.prototype, 'prevItemPrefix', function(text, prefix) {
+    historyManagerInjections['prevItemPrefix'] = injectAfterFunction(History.HistoryManager.prototype, 'prevItemPrefix', function(text, prefix) {
         for (let i = this._historyIndex - 1; i >= 0; i--) {
             if (this._history[i].indexOf(prefix) === 0 && this._history[i] !== text) {
                 this._historyIndex = i;
@@ -43,7 +46,7 @@ function enable() {
         return text;
     });
 
-    historyManagerInjections['nextItemPrefix'] = injectToFunction(History.HistoryManager.prototype, 'nextItemPrefix', function(text, prefix) {
+    historyManagerInjections['nextItemPrefix'] = injectAfterFunction(History.HistoryManager.prototype, 'nextItemPrefix', function(text, prefix) {
         for (let i = this._historyIndex + 1; i < this._history.length; i++) {
             if (this._history[i].indexOf(prefix) === 0 && this._history[i] !== text) {
                 this._historyIndex = i;
@@ -54,9 +57,13 @@ function enable() {
         return text;
     });
 
-    historyManagerInjections['_onEntryKeyPress'] = injectToFunction(History.HistoryManager.prototype, '_onEntryKeyPress', function(entry, event) {
+    historyManagerInjections['_onEntryKeyPress'] = overrideFunction(History.HistoryManager.prototype, '_onEntryKeyPress', function(entry, event) {
         let symbol = event.get_key_symbol();
-        if (symbol === Clutter.KEY_Page_Up) {
+
+        let prevKey = settings.get_int('key-previous');
+        let nextKey = settings.get_int('key-next');
+
+        if (symbol === prevKey) {
             let pos = (entry.get_cursor_position() !== -1) ? entry.get_cursor_position() : entry.get_text().length;
             if (pos > 0) {
                 this.prevItemPrefix(entry.get_text(), entry.get_text().slice(0, pos));
@@ -66,7 +73,7 @@ function enable() {
             entry.set_selection(pos, pos);
 
             return true;
-        } else if (symbol === Clutter.KEY_Page_Down) {
+        } else if (symbol === nextKey) {
             let pos = (entry.get_cursor_position() !== -1) ? entry.get_cursor_position() : entry.get_text().length;
             if (pos > 0) {
                 this.nextItemPrefix(entry.get_text(), entry.get_text().slice(0, pos));
@@ -81,7 +88,23 @@ function enable() {
 
 }
 
-function injectToFunction(objectPrototype, functionName, injectedFunction) {
+function overrideFunction(objectPrototype, functionName, injectedFunction) {
+    let originalFunction = objectPrototype[functionName];
+
+    objectPrototype[functionName] = function() {
+        let returnValue = injectedFunction.apply(this, arguments);
+
+        if (returnValue === undefined && originalFunction !== undefined) {
+            returnValue = originalFunction.apply(this, arguments);
+        }
+
+        return returnValue;
+    };
+
+    return originalFunction;
+}
+
+function injectAfterFunction(objectPrototype, functionName, injectedFunction) {
     let originalFunction = objectPrototype[functionName];
 
     objectPrototype[functionName] = function() {
@@ -118,7 +141,7 @@ function disable() {
 }
 
 function init() {
-    // Stateless
+    settings = Convenience.getSettings(Prefs.PREFS_SCHEMA);
 }
 
 // 3.0 API backward compatibility

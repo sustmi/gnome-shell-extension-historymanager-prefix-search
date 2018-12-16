@@ -2,6 +2,8 @@
 Use *PageUp* and *PageDown* to move in history of eg. *RunCommand* (*Alt+F2*) or *Looking Glass* according the command prefix.
 Works with all components which use `imports.misc.history.HistoryManager`.
 
+The keys can be changed to *Up* and *Down* in configuration.
+
 ## Example usage
 - Start *RunCommand* by pressing *Alt+F2*.
 - Type `gn` and press *PageUp*. It completes the command from your history to `gnome-terminal`.

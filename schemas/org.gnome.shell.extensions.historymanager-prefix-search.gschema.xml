@@ -1,0 +1,10 @@
+<schemalist gettext-domain="historymanager-prefix-search">
+  <schema id="org.gnome.shell.extensions.historymanager-prefix-search" path="/org/gnome/shell/extensions/historymanager-prefix-search/">
+    <key name="key-previous" type="i">
+      <default>65365</default> <!-- Clutter.KEY_Page_Up -->
+    </key>
+    <key name="key-next" type="i">
+      <default>65366</default> <!-- Clutter.KEY_Page_Down -->
+    </key>
+  </schema>
+</schemalist>
