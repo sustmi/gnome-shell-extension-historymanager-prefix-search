@@ -68,7 +68,7 @@ function enable() {
             if (pos > 0) {
                 this.prevItemPrefix(entry.get_text(), entry.get_text().slice(0, pos));
             } else {
-                this._setPrevItem(entry.get_text());
+                this._setPrevItem(entry.get_text().trim());
             }
             entry.set_selection(pos, pos);
 
@@ -78,7 +78,7 @@ function enable() {
             if (pos > 0) {
                 this.nextItemPrefix(entry.get_text(), entry.get_text().slice(0, pos));
             } else {
-                this._setNextItem(entry.get_text())
+                this._setNextItem(entry.get_text().trim())
             }
             entry.set_selection(pos, pos);
 
