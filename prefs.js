@@ -23,7 +23,7 @@ const HistoryManagerPrefixSearchPrefsWidget = GObject.registerClass(
 class HistoryManagerPrefixSearchPrefsWidget
     extends Gtk.Box {
     _init(params) {
-        this.parent(params);
+        super._init(params);
 
         this._settings = Convenience.getSettings(PREFS_SCHEMA);
 
@@ -39,7 +39,7 @@ class HistoryManagerPrefixSearchPrefsWidget
         this._fillData(builder);
         this._connectSignals(builder);
 
-        this.add(this._main_container);
+        this.append(this._main_container);
     }
 
     _fillData() {
@@ -74,6 +74,6 @@ class HistoryManagerPrefixSearchPrefsWidget
 
 function buildPrefsWidget() {
     let widget = new HistoryManagerPrefixSearchPrefsWidget();
-    widget.show_all();
+    widget.show();
     return widget;
 }
