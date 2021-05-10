@@ -1,3 +1,5 @@
+/* exported enable, disable, init, main */
+
 // Search command history by prefix in Gnome-shell's prompts.
 // Copyright (C) 2011 Miroslav Sustek
 
@@ -21,21 +23,15 @@ const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = Me.imports.convenience;
 const Prefs = Me.imports.prefs;
 
-let historyManagerInjections;
+let historyManagerInjections = {};
 let settings;
 
-function resetState() {
-    historyManagerInjections = {};
-}
-
 function enable() {
-    resetState();
-
     historyManagerInjections['prevItemPrefix'] = undefined;
     historyManagerInjections['nextItemPrefix'] = undefined;
     historyManagerInjections['_onEntryKeyPress'] = undefined;
 
-    historyManagerInjections['prevItemPrefix'] = injectAfterFunction(History.HistoryManager.prototype, 'prevItemPrefix', function(text, prefix) {
+    historyManagerInjections['prevItemPrefix'] = injectAfterFunction(History.HistoryManager.prototype, 'prevItemPrefix', function (text, prefix) {
         for (let i = this._historyIndex - 1; i >= 0; i--) {
             if (this._history[i].indexOf(prefix) === 0 && this._history[i] !== text) {
                 this._historyIndex = i;
@@ -46,7 +42,7 @@ function enable() {
         return text;
     });
 
-    historyManagerInjections['nextItemPrefix'] = injectAfterFunction(History.HistoryManager.prototype, 'nextItemPrefix', function(text, prefix) {
+    historyManagerInjections['nextItemPrefix'] = injectAfterFunction(History.HistoryManager.prototype, 'nextItemPrefix', function (text, prefix) {
         for (let i = this._historyIndex + 1; i < this._history.length; i++) {
             if (this._history[i].indexOf(prefix) === 0 && this._history[i] !== text) {
                 this._historyIndex = i;
@@ -57,46 +53,44 @@ function enable() {
         return text;
     });
 
-    historyManagerInjections['_onEntryKeyPress'] = overrideFunction(History.HistoryManager.prototype, '_onEntryKeyPress', function(entry, event) {
+    historyManagerInjections['_onEntryKeyPress'] = overrideFunction(History.HistoryManager.prototype, '_onEntryKeyPress', function (entry, event) {
         let symbol = event.get_key_symbol();
 
         let prevKey = settings.get_int('key-previous');
         let nextKey = settings.get_int('key-next');
 
         if (symbol === prevKey) {
-            let pos = (entry.get_cursor_position() !== -1) ? entry.get_cursor_position() : entry.get_text().length;
-            if (pos > 0) {
+            let pos = entry.get_cursor_position() !== -1 ? entry.get_cursor_position() : entry.get_text().length;
+            if (pos > 0)
                 this.prevItemPrefix(entry.get_text(), entry.get_text().slice(0, pos));
-            } else {
+            else
                 this._setPrevItem(entry.get_text().trim());
-            }
+
             entry.set_selection(pos, pos);
 
             return true;
         } else if (symbol === nextKey) {
-            let pos = (entry.get_cursor_position() !== -1) ? entry.get_cursor_position() : entry.get_text().length;
-            if (pos > 0) {
+            let pos = entry.get_cursor_position() !== -1 ? entry.get_cursor_position() : entry.get_text().length;
+            if (pos > 0)
                 this.nextItemPrefix(entry.get_text(), entry.get_text().slice(0, pos));
-            } else {
-                this._setNextItem(entry.get_text().trim())
-            }
+            else
+                this._setNextItem(entry.get_text().trim());
+
             entry.set_selection(pos, pos);
 
             return true;
         }
     });
-
 }
 
 function overrideFunction(objectPrototype, functionName, injectedFunction) {
     let originalFunction = objectPrototype[functionName];
 
-    objectPrototype[functionName] = function() {
-        let returnValue = injectedFunction.apply(this, arguments);
+    objectPrototype[functionName] = function (...args) {
+        let returnValue = injectedFunction.apply(this, args);
 
-        if (returnValue === undefined && originalFunction !== undefined) {
-            returnValue = originalFunction.apply(this, arguments);
-        }
+        if (returnValue === undefined && originalFunction !== undefined)
+            returnValue = originalFunction.apply(this, args);
 
         return returnValue;
     };
@@ -107,17 +101,15 @@ function overrideFunction(objectPrototype, functionName, injectedFunction) {
 function injectAfterFunction(objectPrototype, functionName, injectedFunction) {
     let originalFunction = objectPrototype[functionName];
 
-    objectPrototype[functionName] = function() {
+    objectPrototype[functionName] = function (...args) {
         let returnValue;
 
-        if (originalFunction !== undefined) {
-        	returnValue = originalFunction.apply(this, arguments);
-        }
+        if (originalFunction !== undefined)
+            returnValue = originalFunction.apply(this, args);
 
-        let injectedReturnValue = injectedFunction.apply(this, arguments);
-        if (injectedReturnValue !== undefined) {
+        let injectedReturnValue = injectedFunction.apply(this, args);
+        if (injectedReturnValue !== undefined)
             returnValue = injectedReturnValue;
-        }
 
         return returnValue;
     };
@@ -126,18 +118,15 @@ function injectAfterFunction(objectPrototype, functionName, injectedFunction) {
 }
 
 function removeInjection(objectPrototype, injection, functionName) {
-    if (injection[functionName] === undefined) {
+    if (injection[functionName] === undefined)
         delete objectPrototype[functionName];
-    } else {
+    else
         objectPrototype[functionName] = injection[functionName];
-    }
 }
 
 function disable() {
-    for (let i in historyManagerInjections) {
+    for (let i in historyManagerInjections)
         removeInjection(History.HistoryManager.prototype, historyManagerInjections, i);
-    }
-    resetState();
 }
 
 function init() {
