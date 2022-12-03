@@ -1,3 +1,4 @@
 [submodule "gnome-shell-extensions"]
 	path = gnome-shell-extensions
 	url = https://gitlab.gnome.org/GNOME/gnome-shell-extensions.git
+	branch = main

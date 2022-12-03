@@ -10,13 +10,13 @@ const Clutter = imports.gi.Clutter;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
-const Convenience = Me.imports.convenience;
 
 const PREFS_UI = `${Me.dir.get_path()}/prefs.xml`;
 const PREFS_SCHEMA = 'org.gnome.shell.extensions.historymanager-prefix-search';
 
+/** GNOME Shell Extension API */
 function init() {
-    Convenience.initTranslations();
+    ExtensionUtils.initTranslations();
 }
 
 const HistoryManagerPrefixSearchPrefsWidget = GObject.registerClass(
@@ -25,7 +25,7 @@ class HistoryManagerPrefixSearchPrefsWidget
     _init(params) {
         super._init(params);
 
-        this._settings = Convenience.getSettings(PREFS_SCHEMA);
+        this._settings = ExtensionUtils.getSettings(PREFS_SCHEMA);
 
         let builder = new Gtk.Builder();
         builder.set_translation_domain(Me.metadata['gettext-domain']);
@@ -72,6 +72,7 @@ class HistoryManagerPrefixSearchPrefsWidget
     }
 });
 
+/** GNOME Shell Extension API */
 function buildPrefsWidget() {
     let widget = new HistoryManagerPrefixSearchPrefsWidget();
     widget.show();

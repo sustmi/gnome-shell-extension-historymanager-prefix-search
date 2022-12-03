@@ -19,14 +19,14 @@
 const History = imports.misc.history;
 
 const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-const Convenience = Me.imports.convenience;
-const Prefs = Me.imports.prefs;
 
 let historyManagerInjections = {};
 let settings;
 
+/** GNOME Shell Extension API */
 function enable() {
+    settings = ExtensionUtils.getSettings();
+
     historyManagerInjections['prevItemPrefix'] = undefined;
     historyManagerInjections['nextItemPrefix'] = undefined;
     historyManagerInjections['_onEntryKeyPress'] = undefined;
@@ -83,6 +83,11 @@ function enable() {
     });
 }
 
+/**
+ * @param {object} objectPrototype - object prototype to be modified
+ * @param {string} functionName - name of the function to be overriden
+ * @param {Function} injectedFunction - new function to be injected instead of @functionName
+ */
 function overrideFunction(objectPrototype, functionName, injectedFunction) {
     let originalFunction = objectPrototype[functionName];
 
@@ -98,6 +103,11 @@ function overrideFunction(objectPrototype, functionName, injectedFunction) {
     return originalFunction;
 }
 
+/**
+ * @param {object} objectPrototype - object prototype to be modified
+ * @param {string} functionName - name of the original function after which @injectedFunction will be executed
+ * @param {Function} injectedFunction - new function to be executed after @functionName
+ */
 function injectAfterFunction(objectPrototype, functionName, injectedFunction) {
     let originalFunction = objectPrototype[functionName];
 
@@ -117,6 +127,11 @@ function injectAfterFunction(objectPrototype, functionName, injectedFunction) {
     return originalFunction;
 }
 
+/**
+ * @param {object} objectPrototype - object prototype to be modified
+ * @param {Function} injection - original function to be returned to the @objectPrototype
+ * @param {Function} functionName - name of the function in the @objectPrototype
+ */
 function removeInjection(objectPrototype, injection, functionName) {
     if (injection[functionName] === undefined)
         delete objectPrototype[functionName];
@@ -124,16 +139,21 @@ function removeInjection(objectPrototype, injection, functionName) {
         objectPrototype[functionName] = injection[functionName];
 }
 
+/** GNOME Shell Extension API */
 function disable() {
     for (let i in historyManagerInjections)
         removeInjection(History.HistoryManager.prototype, historyManagerInjections, i);
+
+    settings = null;
 }
 
+/** GNOME Shell Extension API */
 function init() {
-    settings = Convenience.getSettings(Prefs.PREFS_SCHEMA);
 }
 
-// 3.0 API backward compatibility
+/**
+ * 3.0 API backward compatibility
+ */
 function main() {
     init();
     enable();

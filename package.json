@@ -18,6 +18,7 @@
   "homepage": "https://github.com/sustmi/gnome-shell-extension-historymanager-prefix-search#readme",
   "devDependencies": {
     "eslint": "^8.29.0",
-    "eslint-formatter-codeframe": "^7.32.1"
+    "eslint-formatter-codeframe": "^7.32.1",
+    "eslint-plugin-jsdoc": "^39.6.4"
   }
 }
