@@ -13,5 +13,5 @@
     "url": "https://github.com/sustmi/gnome-shell-extension-historymanager-prefix-search",
     "settings-schema": "org.gnome.shell.extensions.historymanager-prefix-search",
     "gettext-domain": "historymanager-prefix-search",
-    "version": 17
+    "version": 18
 }

@@ -35,6 +35,7 @@ increase_version:
 release: increase_version zip
 
 zip: all
+	rm -f historymanager-prefix-search.zip
 	zip -rq historymanager-prefix-search.zip \
 		CHANGELOG.md \
 		COPYING \
