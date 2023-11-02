@@ -16,8 +16,8 @@ msgstr ""
 "Language: cs_CZ\n"
 
 #: prefs.xml:22
-msgid "Control keys:"
-msgstr "Ovládací klávesy:"
+msgid "Control keys"
+msgstr "Ovládací klávesy"
 
 #: prefs.xml:44
 msgid "PageUp + PageDown"

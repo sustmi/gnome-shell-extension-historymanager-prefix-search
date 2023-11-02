@@ -2,7 +2,7 @@ default_target: all
 
 po_files := $(wildcard ./po/*.po)
 
-.PHONY: all clean pot schemas zip
+.PHONY: all clean update_dependencies check pot schemas increase_version release zip
 
 all: update_dependencies schemas locales
 
@@ -12,8 +12,9 @@ clean:
 
 update_dependencies:
 	git submodule update --init
+	git submodule update --recursive --remote
 
-check: update_dependencies
+check:
 	npm run check
 
 pot:

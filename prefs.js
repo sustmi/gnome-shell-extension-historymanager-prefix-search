@@ -1,80 +1,42 @@
 /* exported init, buildPrefsWidget */
 
-const Gtk = imports.gi.Gtk;
-const GObject = imports.gi.GObject;
+import Adw from 'gi://Adw';
+import Clutter from 'gi://Clutter';
+import Gtk from 'gi://Gtk';
 
-const Gettext = imports.gettext;
-const _ = Gettext.gettext;
+import {ExtensionPreferences, gettext as _} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
-const Clutter = imports.gi.Clutter;
+export default class HistoryManagerPrefixSearchExtensionPreferences extends ExtensionPreferences {
+    fillPreferencesWindow(window) {
+        const settings = this.getSettings();
 
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
+        const page = new Adw.PreferencesPage();
+        window.add(page);
 
-const PREFS_UI = `${Me.dir.get_path()}/prefs.xml`;
-const PREFS_SCHEMA = 'org.gnome.shell.extensions.historymanager-prefix-search';
+        const group = new Adw.PreferencesGroup();
+        page.add(group);
 
-/** GNOME Shell Extension API */
-function init() {
-    ExtensionUtils.initTranslations();
-}
+        const controlKeysOptions = new Gtk.StringList();
+        controlKeysOptions.append(_('PageUp + PageDown'));
+        controlKeysOptions.append(_('KeyUp + KeyDown'));
 
-const HistoryManagerPrefixSearchPrefsWidget = GObject.registerClass(
-class HistoryManagerPrefixSearchPrefsWidget
-    extends Gtk.Box {
-    _init(params) {
-        super._init(params);
-
-        this._settings = ExtensionUtils.getSettings(PREFS_SCHEMA);
-
-        let builder = new Gtk.Builder();
-        builder.set_translation_domain(Me.metadata['gettext-domain']);
-
-        builder.add_from_file(PREFS_UI);
-
-        this._main_container = builder.get_object('main-container');
-        this._page_keys = builder.get_object('page-keys');
-        this._arrow_keys = builder.get_object('arrow-keys');
-
-        this._fillData(builder);
-        this._connectSignals(builder);
-
-        this.append(this._main_container);
-    }
-
-    _fillData() {
-        switch (this._settings.get_int('key-previous')) {
-        case Clutter.KEY_Page_Up:
-        default:
-            this._page_keys.set_active(true);
-            break;
-
-        case Clutter.KEY_Up:
-            this._arrow_keys.set_active(true);
-            break;
-        }
-    }
-
-    _connectSignals() {
-        this._page_keys.connect('toggled', radioButton => {
-            if (radioButton.active) {
-                this._settings.set_int('key-previous', Clutter.KEY_Page_Up);
-                this._settings.set_int('key-next', Clutter.KEY_Page_Down);
-            }
+        const controlKeysComboRow = new Adw.ComboRow({
+            title: _('Control keys'),
+            model: controlKeysOptions,
+            selected: settings.get_int('key-previous') === Clutter.KEY_Page_Up ? 0 : 1,
         });
-
-        this._arrow_keys.connect('toggled', radioButton => {
-            if (radioButton.active) {
-                this._settings.set_int('key-previous', Clutter.KEY_Up);
-                this._settings.set_int('key-next', Clutter.KEY_Down);
+        controlKeysComboRow.connect(
+            'notify::selected',
+            comboRow => {
+                if (comboRow.selected === 0) {
+                    settings.set_int('key-previous', Clutter.KEY_Page_Up);
+                    settings.set_int('key-next', Clutter.KEY_Page_Down);
+                } else {
+                    settings.set_int('key-previous', Clutter.KEY_Up);
+                    settings.set_int('key-next', Clutter.KEY_Down);
+                }
             }
-        });
+        );
+        group.add(controlKeysComboRow);
     }
-});
-
-/** GNOME Shell Extension API */
-function buildPrefsWidget() {
-    let widget = new HistoryManagerPrefixSearchPrefsWidget();
-    widget.show();
-    return widget;
 }

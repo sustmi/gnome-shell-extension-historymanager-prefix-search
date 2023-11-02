@@ -15,7 +15,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: prefs.xml:22
-msgid "Control keys:"
+msgid "Control keys"
 msgstr ""
 
 #: prefs.xml:44

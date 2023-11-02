@@ -16,145 +16,89 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-const History = imports.misc.history;
+import Clutter from 'gi://Clutter';
+import * as History from 'resource:///org/gnome/shell/misc/history.js';
+import {Extension, InjectionManager} from 'resource:///org/gnome/shell/extensions/extension.js';
 
-const ExtensionUtils = imports.misc.extensionUtils;
+export default class HistoryManagerPrefixSearchExtension extends Extension {
+    constructor(metadata) {
+        super(metadata);
+        this._injectionManager = new InjectionManager();
+    }
 
-let historyManagerInjections = {};
-let settings;
+    enable() {
+        this._settings = this.getSettings();
+        const _settings = this._settings;
 
-/** GNOME Shell Extension API */
-function enable() {
-    settings = ExtensionUtils.getSettings();
+        this._injectionManager.overrideMethod(History.HistoryManager.prototype, 'prevItemPrefix', () => {
+            return function (text, prefix) {
+                /* eslint-disable no-invalid-this */
+                for (let i = this._historyIndex - 1; i >= 0; i--) {
+                    if (this._history[i].indexOf(prefix) === 0 && this._history[i] !== text) {
+                        this._historyIndex = i;
+                        return this._indexChanged();
+                    }
+                }
 
-    historyManagerInjections['prevItemPrefix'] = undefined;
-    historyManagerInjections['nextItemPrefix'] = undefined;
-    historyManagerInjections['_onEntryKeyPress'] = undefined;
+                return text;
+                /* eslint-enable no-invalid-this */
+            };
+        });
 
-    historyManagerInjections['prevItemPrefix'] = injectAfterFunction(History.HistoryManager.prototype, 'prevItemPrefix', function (text, prefix) {
-        for (let i = this._historyIndex - 1; i >= 0; i--) {
-            if (this._history[i].indexOf(prefix) === 0 && this._history[i] !== text) {
-                this._historyIndex = i;
-                return this._indexChanged();
-            }
-        }
+        this._injectionManager.overrideMethod(History.HistoryManager.prototype, 'nextItemPrefix', () => {
+            return function (text, prefix) {
+                /* eslint-disable no-invalid-this */
+                for (let i = this._historyIndex + 1; i < this._history.length; i++) {
+                    if (this._history[i].indexOf(prefix) === 0 && this._history[i] !== text) {
+                        this._historyIndex = i;
+                        return this._indexChanged();
+                    }
+                }
 
-        return text;
-    });
+                return text;
+                /* eslint-enable no-invalid-this */
+            };
+        });
 
-    historyManagerInjections['nextItemPrefix'] = injectAfterFunction(History.HistoryManager.prototype, 'nextItemPrefix', function (text, prefix) {
-        for (let i = this._historyIndex + 1; i < this._history.length; i++) {
-            if (this._history[i].indexOf(prefix) === 0 && this._history[i] !== text) {
-                this._historyIndex = i;
-                return this._indexChanged();
-            }
-        }
+        this._injectionManager.overrideMethod(History.HistoryManager.prototype, '_onEntryKeyPress', () => {
+            return function (entry, event) {
+                /* eslint-disable no-invalid-this */
+                let symbol = event.get_key_symbol();
 
-        return text;
-    });
+                let prevKey = _settings.get_int('key-previous');
+                let nextKey = _settings.get_int('key-next');
 
-    historyManagerInjections['_onEntryKeyPress'] = overrideFunction(History.HistoryManager.prototype, '_onEntryKeyPress', function (entry, event) {
-        let symbol = event.get_key_symbol();
+                if (symbol === prevKey) {
+                    let pos = entry.get_cursor_position() !== -1 ? entry.get_cursor_position() : entry.get_text().length;
+                    if (pos > 0)
+                        this.prevItemPrefix(entry.get_text(), entry.get_text().slice(0, pos));
+                    else
+                        this._setPrevItem(entry.get_text().trim());
 
-        let prevKey = settings.get_int('key-previous');
-        let nextKey = settings.get_int('key-next');
+                    entry.set_selection(pos, pos);
 
-        if (symbol === prevKey) {
-            let pos = entry.get_cursor_position() !== -1 ? entry.get_cursor_position() : entry.get_text().length;
-            if (pos > 0)
-                this.prevItemPrefix(entry.get_text(), entry.get_text().slice(0, pos));
-            else
-                this._setPrevItem(entry.get_text().trim());
+                    return true;
+                } else if (symbol === nextKey) {
+                    let pos = entry.get_cursor_position() !== -1 ? entry.get_cursor_position() : entry.get_text().length;
+                    if (pos > 0)
+                        this.nextItemPrefix(entry.get_text(), entry.get_text().slice(0, pos));
+                    else
+                        this._setNextItem(entry.get_text().trim());
 
-            entry.set_selection(pos, pos);
+                    entry.set_selection(pos, pos);
 
-            return true;
-        } else if (symbol === nextKey) {
-            let pos = entry.get_cursor_position() !== -1 ? entry.get_cursor_position() : entry.get_text().length;
-            if (pos > 0)
-                this.nextItemPrefix(entry.get_text(), entry.get_text().slice(0, pos));
-            else
-                this._setNextItem(entry.get_text().trim());
+                    return true;
+                }
 
-            entry.set_selection(pos, pos);
+                return Clutter.EVENT_PROPAGATE;
+                /* eslint-enable no-invalid-this */
+            };
+        });
+    }
 
-            return true;
-        }
-    });
-}
+    disable() {
+        this._injectionManager.clear();
 
-/**
- * @param {object} objectPrototype - object prototype to be modified
- * @param {string} functionName - name of the function to be overriden
- * @param {Function} injectedFunction - new function to be injected instead of @functionName
- */
-function overrideFunction(objectPrototype, functionName, injectedFunction) {
-    let originalFunction = objectPrototype[functionName];
-
-    objectPrototype[functionName] = function (...args) {
-        let returnValue = injectedFunction.apply(this, args);
-
-        if (returnValue === undefined && originalFunction !== undefined)
-            returnValue = originalFunction.apply(this, args);
-
-        return returnValue;
-    };
-
-    return originalFunction;
-}
-
-/**
- * @param {object} objectPrototype - object prototype to be modified
- * @param {string} functionName - name of the original function after which @injectedFunction will be executed
- * @param {Function} injectedFunction - new function to be executed after @functionName
- */
-function injectAfterFunction(objectPrototype, functionName, injectedFunction) {
-    let originalFunction = objectPrototype[functionName];
-
-    objectPrototype[functionName] = function (...args) {
-        let returnValue;
-
-        if (originalFunction !== undefined)
-            returnValue = originalFunction.apply(this, args);
-
-        let injectedReturnValue = injectedFunction.apply(this, args);
-        if (injectedReturnValue !== undefined)
-            returnValue = injectedReturnValue;
-
-        return returnValue;
-    };
-
-    return originalFunction;
-}
-
-/**
- * @param {object} objectPrototype - object prototype to be modified
- * @param {Function} injection - original function to be returned to the @objectPrototype
- * @param {Function} functionName - name of the function in the @objectPrototype
- */
-function removeInjection(objectPrototype, injection, functionName) {
-    if (injection[functionName] === undefined)
-        delete objectPrototype[functionName];
-    else
-        objectPrototype[functionName] = injection[functionName];
-}
-
-/** GNOME Shell Extension API */
-function disable() {
-    for (let i in historyManagerInjections)
-        removeInjection(History.HistoryManager.prototype, historyManagerInjections, i);
-
-    settings = null;
-}
-
-/** GNOME Shell Extension API */
-function init() {
-}
-
-/**
- * 3.0 API backward compatibility
- */
-function main() {
-    init();
-    enable();
+        this._settings = null;
+    }
 }
