@@ -21,14 +21,11 @@ import * as History from 'resource:///org/gnome/shell/misc/history.js';
 import {Extension, InjectionManager} from 'resource:///org/gnome/shell/extensions/extension.js';
 
 export default class HistoryManagerPrefixSearchExtension extends Extension {
-    constructor(metadata) {
-        super(metadata);
-        this._injectionManager = new InjectionManager();
-    }
-
     enable() {
         this._settings = this.getSettings();
         const _settings = this._settings;
+
+        this._injectionManager = new InjectionManager();
 
         this._injectionManager.overrideMethod(History.HistoryManager.prototype, 'prevItemPrefix', () => {
             return function (text, prefix) {
@@ -98,7 +95,7 @@ export default class HistoryManagerPrefixSearchExtension extends Extension {
 
     disable() {
         this._injectionManager.clear();
-
+        this._injectionManager = null;
         this._settings = null;
     }
 }
