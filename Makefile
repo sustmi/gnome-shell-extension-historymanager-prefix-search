@@ -33,7 +33,7 @@ locales: $(po_files)
 increase_version:
 	jq --indent 4 ".version |= .+1" < metadata.json | sponge metadata.json
 
-release: increase_version zip
+release: zip
 
 zip: all
 	rm -f historymanager-prefix-search.zip
