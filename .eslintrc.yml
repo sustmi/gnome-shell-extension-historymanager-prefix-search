@@ -1,2 +1,0 @@
-extends:
- - ./gnome-shell-extensions/.eslintrc.yml

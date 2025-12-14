@@ -2,7 +2,7 @@ default_target: all
 
 po_files := $(wildcard ./po/*.po)
 
-.PHONY: all clean update_dependencies check pot schemas increase_version release zip
+.PHONY: all clean update_dependencies check fix pot schemas increase_version release zip
 
 all: update_dependencies schemas locales
 
@@ -16,6 +16,9 @@ update_dependencies:
 
 check:
 	npm run check
+
+fix:
+	npm run fix
 
 pot:
 	xgettext --language=Glade --output=./po/historymanager-prefix-search.pot prefs.xml

@@ -60,13 +60,13 @@ export default class HistoryManagerPrefixSearchExtension extends Extension {
         this._injectionManager.overrideMethod(History.HistoryManager.prototype, '_onEntryKeyPress', () => {
             return function (entry, event) {
                 /* eslint-disable no-invalid-this */
-                let symbol = event.get_key_symbol();
+                const symbol = event.get_key_symbol();
 
-                let prevKey = _settings.get_int('key-previous');
-                let nextKey = _settings.get_int('key-next');
+                const prevKey = _settings.get_int('key-previous');
+                const nextKey = _settings.get_int('key-next');
 
                 if (symbol === prevKey) {
-                    let pos = entry.get_cursor_position() !== -1 ? entry.get_cursor_position() : entry.get_text().length;
+                    const pos = entry.get_cursor_position() !== -1 ? entry.get_cursor_position() : entry.get_text().length;
                     if (pos > 0)
                         this.prevItemPrefix(entry.get_text(), entry.get_text().slice(0, pos));
                     else
@@ -76,7 +76,7 @@ export default class HistoryManagerPrefixSearchExtension extends Extension {
 
                     return true;
                 } else if (symbol === nextKey) {
-                    let pos = entry.get_cursor_position() !== -1 ? entry.get_cursor_position() : entry.get_text().length;
+                    const pos = entry.get_cursor_position() !== -1 ? entry.get_cursor_position() : entry.get_text().length;
                     if (pos > 0)
                         this.nextItemPrefix(entry.get_text(), entry.get_text().slice(0, pos));
                     else

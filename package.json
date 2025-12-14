@@ -1,6 +1,7 @@
 {
   "name": "gnome-shell-extension-historymanager-prefix-search",
   "description": "Use PageUp and PageDown keys to search in history of RunCommand (Alt+F2) window by prefix",
+  "type": "module",
   "main": "extension.js",
   "scripts": {
     "check": "eslint --format codeframe *.js",
@@ -17,8 +18,10 @@
   },
   "homepage": "https://github.com/sustmi/gnome-shell-extension-historymanager-prefix-search#readme",
   "devDependencies": {
+    "@eslint/config-helpers": "^0.5.0",
     "eslint": "^8.29.0",
     "eslint-formatter-codeframe": "^7.32.1",
-    "eslint-plugin-jsdoc": "^39.6.4"
+    "eslint-plugin-jsdoc": "^39.6.4",
+    "gnome-shell-extensions-dev-scripts": "file:gnome-shell-extensions/tools"
   }
 }
