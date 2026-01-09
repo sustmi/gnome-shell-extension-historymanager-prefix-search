@@ -38,15 +38,10 @@ increase_version:
 
 release: zip
 
-zip: all
-	rm -f historymanager-prefix-search.zip
-	zip -rq historymanager-prefix-search.zip \
-		CHANGELOG.md \
-		COPYING \
-		README.md \
-		*.js \
-		metadata.json \
-		prefs.xml \
-        stylesheet.css \
-        locale/* \
-        schemas/*
+zip:
+	gnome-extensions pack ./ \
+		--force \
+		--podir=po \
+		--extra-source=CHANGELOG.md \
+		--extra-source=COPYING \
+		--extra-source=README.md

@@ -1,7 +1,7 @@
 /locale/*
 /node_modules/
 /schemas/*.compiled
-/historymanager-prefix-search.zip
+/*.zip
 
 !.gitignore
 !.gitkeep
