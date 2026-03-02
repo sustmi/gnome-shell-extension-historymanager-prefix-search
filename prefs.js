@@ -1,7 +1,7 @@
 /* exported init, buildPrefsWidget */
 
 import Adw from 'gi://Adw';
-import Clutter from 'gi://Clutter';
+import Gdk from 'gi://Gdk?version=4.0';
 import Gtk from 'gi://Gtk';
 
 import {ExtensionPreferences, gettext as _} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
@@ -23,17 +23,17 @@ export default class HistoryManagerPrefixSearchExtensionPreferences extends Exte
         const controlKeysComboRow = new Adw.ComboRow({
             title: _('Control keys'),
             model: controlKeysOptions,
-            selected: settings.get_int('key-previous') === Clutter.KEY_Page_Up ? 0 : 1,
+            selected: settings.get_int('key-previous') === Gdk.KEY_Page_Up ? 0 : 1,
         });
         controlKeysComboRow.connect(
             'notify::selected',
             comboRow => {
                 if (comboRow.selected === 0) {
-                    settings.set_int('key-previous', Clutter.KEY_Page_Up);
-                    settings.set_int('key-next', Clutter.KEY_Page_Down);
+                    settings.set_int('key-previous', Gdk.KEY_Page_Up);
+                    settings.set_int('key-next', Gdk.KEY_Page_Down);
                 } else {
-                    settings.set_int('key-previous', Clutter.KEY_Up);
-                    settings.set_int('key-next', Clutter.KEY_Down);
+                    settings.set_int('key-previous', Gdk.KEY_Up);
+                    settings.set_int('key-next', Gdk.KEY_Down);
                 }
             }
         );
