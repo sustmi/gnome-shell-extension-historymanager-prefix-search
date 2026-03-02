@@ -16,7 +16,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import Clutter from 'gi://Clutter';
 import * as History from 'resource:///org/gnome/shell/misc/history.js';
 import {Extension, InjectionManager} from 'resource:///org/gnome/shell/extensions/extension.js';
 
@@ -87,7 +86,7 @@ export default class HistoryManagerPrefixSearchExtension extends Extension {
                     return true;
                 }
 
-                return Clutter.EVENT_PROPAGATE;
+                return false;
                 /* eslint-enable no-invalid-this */
             };
         });
