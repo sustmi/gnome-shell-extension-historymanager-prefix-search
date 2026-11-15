@@ -4,7 +4,7 @@
     ],
     "uuid": "historymanager-prefix-search@sustmidown.centrum.cz",
     "name": "History Manager Prefix Search",
-    "description": "Use PageUp and PageDown to move in HistoryManager (eg. Run Command, Looking Glass) according to prefix",
+    "description": "Use PageUp and PageDown (or Up and Down, configurable in preferences) to move in HistoryManager (eg. Run Command, Looking Glass) according to prefix",
     "url": "https://github.com/sustmi/gnome-shell-extension-historymanager-prefix-search",
     "settings-schema": "org.gnome.shell.extensions.historymanager-prefix-search",
     "gettext-domain": "historymanager-prefix-search",

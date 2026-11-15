@@ -1,5 +1,3 @@
-/* exported enable, disable, init, main */
-
 // Search command history by prefix in Gnome-shell's prompts.
 // Copyright (C) 2011 Miroslav Sustek
 
@@ -67,7 +65,7 @@ export default class HistoryManagerPrefixSearchExtension extends Extension {
 
             const entry = historyManager._entry;
             const controller = new Clutter.KeyController();
-            controller.connect('key-press', () => {
+            const signalId = controller.connect('key-press', () => {
                 const [, symbol] = controller.get_key();
 
                 const prevKey = _settings.get_int('key-previous');
@@ -99,7 +97,7 @@ export default class HistoryManagerPrefixSearchExtension extends Extension {
             // Otherwise it would handle Up/Down first (and stop the event), so our prefix search
             // would never run for those keys.
             entry.add_action_full('historymanager-prefix-search', Clutter.EventPhase.CAPTURE, controller);
-            this._controllers.set(historyManager, {entry, controller});
+            this._controllers.set(historyManager, {entry, controller, signalId});
         };
 
         for (const proto of [RunDialog.RunDialog.prototype, LookingGlass.LookingGlass.prototype]) {
@@ -119,8 +117,10 @@ export default class HistoryManagerPrefixSearchExtension extends Extension {
 
     disable() {
         this._injectionManager.clear();
-        for (const {entry, controller} of this._controllers.values())
+        for (const {entry, controller, signalId} of this._controllers.values()) {
+            controller.disconnect(signalId);
             entry.remove_action(controller);
+        }
         this._controllers = null;
         this._injectionManager = null;
         this._settings = null;
