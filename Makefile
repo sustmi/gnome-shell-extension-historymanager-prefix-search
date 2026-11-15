@@ -1,14 +1,17 @@
 default_target: all
 
+VENV := .venv
+
 po_files := $(wildcard ./po/*.po)
 
-.PHONY: all clean update_dependencies check fix pot schemas increase_version release zip
+.PHONY: all clean update_dependencies check fix pot schemas increase_version release zip shexli
 
 all: update_dependencies schemas locales
 
 clean:
 	rm -f historymanager-prefix-search.zip
 	rm -f ./schemas/gschemas.compiled
+	rm -rf $(VENV)
 
 update_dependencies:
 	git submodule update --init
@@ -38,6 +41,10 @@ increase_version:
 
 release: zip
 
+$(VENV)/bin/shexli:
+	python3 -m venv $(VENV)
+	$(VENV)/bin/pip install -U shexli
+
 zip:
 	gnome-extensions pack ./ \
 		--force \
@@ -45,3 +52,6 @@ zip:
 		--extra-source=CHANGELOG.md \
 		--extra-source=COPYING \
 		--extra-source=README.md
+
+shexli: zip $(VENV)/bin/shexli
+	$(VENV)/bin/shexli ./*.shell-extension.zip
