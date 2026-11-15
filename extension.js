@@ -18,6 +18,9 @@
 
 import Clutter from 'gi://Clutter';
 import * as History from 'resource:///org/gnome/shell/misc/history.js';
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as RunDialog from 'resource:///org/gnome/shell/ui/runDialog.js';
+import * as LookingGlass from 'resource:///org/gnome/shell/ui/lookingGlass.js';
 import {Extension, InjectionManager} from 'resource:///org/gnome/shell/extensions/extension.js';
 
 export default class HistoryManagerPrefixSearchExtension extends Extension {
@@ -26,6 +29,7 @@ export default class HistoryManagerPrefixSearchExtension extends Extension {
         const _settings = this._settings;
 
         this._injectionManager = new InjectionManager();
+        this._controllers = new Map();
 
         this._injectionManager.overrideMethod(History.HistoryManager.prototype, 'prevItemPrefix', () => {
             return function (text, prefix) {
@@ -57,44 +61,67 @@ export default class HistoryManagerPrefixSearchExtension extends Extension {
             };
         });
 
-        this._injectionManager.overrideMethod(History.HistoryManager.prototype, '_onEntryKeyPress', () => {
-            return function (entry, event) {
-                /* eslint-disable no-invalid-this */
-                const symbol = event.get_key_symbol();
+        const attach = historyManager => {
+            if (!historyManager || !historyManager._entry || this._controllers.has(historyManager))
+                return;
+
+            const entry = historyManager._entry;
+            const controller = new Clutter.KeyController();
+            controller.connect('key-press', () => {
+                const [, symbol] = controller.get_key();
 
                 const prevKey = _settings.get_int('key-previous');
                 const nextKey = _settings.get_int('key-next');
 
+                if (symbol !== prevKey && symbol !== nextKey)
+                    return Clutter.EVENT_PROPAGATE;
+
+                const text = entry.get_text();
+                const cursor = entry.get_cursor_position();
+                const pos = cursor !== -1 ? cursor : text.length;
                 if (symbol === prevKey) {
-                    const pos = entry.get_cursor_position() !== -1 ? entry.get_cursor_position() : entry.get_text().length;
                     if (pos > 0)
-                        this.prevItemPrefix(entry.get_text(), entry.get_text().slice(0, pos));
+                        historyManager.prevItemPrefix(text, text.slice(0, pos));
                     else
-                        this._setPrevItem(entry.get_text().trim());
-
-                    entry.set_selection(pos, pos);
-
-                    return true;
-                } else if (symbol === nextKey) {
-                    const pos = entry.get_cursor_position() !== -1 ? entry.get_cursor_position() : entry.get_text().length;
-                    if (pos > 0)
-                        this.nextItemPrefix(entry.get_text(), entry.get_text().slice(0, pos));
-                    else
-                        this._setNextItem(entry.get_text().trim());
-
-                    entry.set_selection(pos, pos);
-
-                    return true;
+                        historyManager._setPrevItem(text.trim());
+                } else if (pos > 0) {
+                    historyManager.nextItemPrefix(text, text.slice(0, pos));
+                } else {
+                    historyManager._setNextItem(text.trim());
                 }
 
-                return Clutter.EVENT_PROPAGATE;
-                /* eslint-enable no-invalid-this */
-            };
-        });
+                entry.set_selection(pos, pos);
+
+                return Clutter.EVENT_STOP;
+            });
+
+            // Capture phase runs before the bubble-phase controller added by HistoryManager itself.
+            // Otherwise it would handle Up/Down first (and stop the event), so our prefix search
+            // would never run for those keys.
+            entry.add_action_full('historymanager-prefix-search', Clutter.EventPhase.CAPTURE, controller);
+            this._controllers.set(historyManager, {entry, controller});
+        };
+
+        for (const proto of [RunDialog.RunDialog.prototype, LookingGlass.LookingGlass.prototype]) {
+            this._injectionManager.overrideMethod(proto, 'open', originalMethod => {
+                return function (...args) {
+                    /* eslint-disable no-invalid-this */
+                    attach(this._history);
+                    return originalMethod.call(this, ...args);
+                    /* eslint-enable no-invalid-this */
+                };
+            });
+        }
+
+        attach(Main.runDialog?._history);
+        attach(Main.lookingGlass?._history);
     }
 
     disable() {
         this._injectionManager.clear();
+        for (const {entry, controller} of this._controllers.values())
+            entry.remove_action(controller);
+        this._controllers = null;
         this._injectionManager = null;
         this._settings = null;
     }

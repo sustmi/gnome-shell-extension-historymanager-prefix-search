@@ -1,11 +1,6 @@
 {
     "shell-version": [
-        "45",
-        "46",
-        "47",
-        "48",
-        "49",
-        "50"
+        "51"
     ],
     "uuid": "historymanager-prefix-search@sustmidown.centrum.cz",
     "name": "History Manager Prefix Search",
